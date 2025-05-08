@@ -1,0 +1,72 @@
+#---------------------------------------------------------------DEPLOYMENT---------------------------------------------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: error-com
+  namespace: app-net
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test
+  template:
+    metadata:
+      labels:
+        app: test
+    spec:
+      containers:
+      - name: testing-container
+        image: ghcr.io/mlsysadmin/hello-world:1.0
+        ports:
+        - containerPort: 9000
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2"
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+      imagePullSecrets:
+      - name: error-secret
+#------------------------------------------------------------------SERVICE---------------------------------------------------------------------------------------------
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: errorsvc-com
+  namespace: app-net
+spec:
+  selector:
+    app: test
+  ports:
+  - name: http
+    port: 80
+    targetPort: 9000
+  type: ClusterIP
+#-------------------------------------------------------------------INGRESS--------------------------------------------------------------------------------------------
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: error-ingress-com
+  namespace: app-net
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - oscar.mlhuillier.com
+      secretName: com-tls
+  rules:
+    - host: oscar.mlhuillier.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: errorsvc-com
+                port:
+                  number: 80
