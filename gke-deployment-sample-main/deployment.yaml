@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hi-world
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hi-world
+  template:
+    metadata:
+      labels:
+        app: hi-world
+    spec:
+      containers:
+      - name: hi-world
+        image: gcr.io/cubz-sample-project-gcp/hi-world:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hi-world
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: hi-world 
